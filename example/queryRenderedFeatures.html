@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Filter features within map view</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link rel='stylesheet' href='../dist/mapbox-gl.css' />
+<style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+</head>
+<body>
+<style>
+    #map {
+        position: absolute;
+        left: 25%;
+        top: 0;
+        bottom: 0;
+        width: 75%;
+    }
+    .map-overlay {
+        position: absolute;
+        width: 25%;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        background-color: #efefef;
+        max-height: 100%;
+        overflow: hidden;
+    }
+
+    .map-overlay fieldset {
+        display: none;
+        background: #0ff;
+        border: none;
+        padding: 10px;
+        margin: 0;
+    }
+
+    .map-overlay input {
+        display: block;
+        border: none;
+        width: 100%;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .map-overlay .listing {
+        overflow: auto;
+        max-height: 100%;
+    }
+
+    .map-overlay .listing > * {
+        display: block;
+        padding: 5px 10px;
+        margin: 0;
+    }
+
+    .map-overlay .listing a {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        color: #404;
+        text-decoration: none;
+    }
+
+    .map-overlay .listing a:last-child {
+        border: none;
+    }
+
+    .map-overlay .listing a:hover {
+        background: #f00;
+    }
+
+    .map-overlay #globe {
+        margin: 15px;
+        font-size: 14px;
+        padding: 8px;
+        background-color: gray;
+        font-weight: bold;
+    }
+</style>
+
+<div id="map"></div>
+<script src='../dist/mapbox-gl-dev.js'></script>
+<script src='../debug/access_token_generated.js'></script>
+<script>
+    const map = new mapboxgl.Map({
+        container: 'map',
+
+
+        center: [-98, 38.88],
+        maxZoom: 5,
+        minZoom: 1,
+        zoom: 3
+    });
+
+    //加载图标
+    map.loadImage('../data/1.png', function (error, image) {
+        if (error) throw error
+        map.addImage('bubbleIcon', image, { sdf: true })
+    })
+    map.on('load', () => {
+        map.addSource('province', {
+            'type': 'geojson',
+            'data': '../data/province.json'
+        });
+        map.addLayer({
+            'id': 'prov',
+            'source': 'province',
+            'type': 'symbol',
+            'layout': {
+                'icon-image': 'bubbleIcon',  // 设置符号的图标
+                'icon-size': 0.13,  // 设置图标大小
+                // 'icon-allow-overlap': true,  // 允许符号重叠
+                'text-field': ['get', 'NAME'],
+                'text-font': ['Open Sans Bold'],
+                'text-size': 12,
+                'text-offset': [0, 1.0]
+            },
+            'paint': {
+                'text-color': 'black',  // 设置文本颜色（可选）
+                "icon-color": "#ffff00",
+            }
+        });
+        map.on('click', function(e) {
+            const lngLat = e.lngLat;
+
+            const features = map.queryRenderedFeatures(
+                [e.point.x, e.point.y],
+                {
+                    layers: ['prov'],
+                    filter: ['==', '$type', 'Point'] // 过滤器表达式
+                }
+            );
+            console.log(features);
+        });
+
+    });
+
+
+</script>
+
+</body>
+</html>
